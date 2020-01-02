@@ -213,10 +213,12 @@ public class PluginProcessMain {
      * 常驻进程调用，缓存自己的 IPluginHost
      */
     static final void installHost(IPluginHost host) {
+        //add by whw: 持有IPluginHost的引用，也就是外面传入的PmHostSvc
         sPluginHostLocal = host;
         // 连接到插件化管理器的服务端
         // Added by Jiongxuan Zhang
         try {
+            //add by whw: 连接到插件化管理器的服务端，传入PmHostSvc
             PluginManagerProxy.connectToServer(sPluginHostLocal);
         } catch (RemoteException e) {
             // 基本不太可能到这里，直接打出日志
@@ -231,6 +233,7 @@ public class PluginProcessMain {
      */
     static final void connectToHostSvc() {
         Context context = PMF.getApplicationContext();
+        // add by whw: 通过判断是哪个进程然后进行远程调用返回Binder，其实返回的就是PmHostSvc对象
         IBinder binder = PluginProviderStub.proxyFetchHostBinder(context);
         if (LOG) {
             LogDebug.d(PLUGIN_TAG, "host binder = " + binder);
@@ -271,7 +274,7 @@ public class PluginProcessMain {
             System.exit(1);
         }
 
-        //
+        // add by whw：通过调用asInterface方法确定是否需要返回远程代理
         sPluginHostRemote = IPluginHost.Stub.asInterface(binder);
         if (LOG) {
             LogDebug.d(PLUGIN_TAG, "host binder.i = " + PluginProcessMain.sPluginHostRemote);

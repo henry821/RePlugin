@@ -620,6 +620,7 @@ class Plugin {
         }
         //
         long t1 = System.currentTimeMillis();
+        //add by whw：真正的加载
         boolean rc = doLoad(logTag, context, parent, manager, load);
         if (LOG) {
             LogDebug.i(PLUGIN_TAG, "load " + mInfo.getPath() + " " + hashCode() + " c=" + load + " rc=" + rc + " delta=" + (System.currentTimeMillis() - t1));

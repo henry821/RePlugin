@@ -57,6 +57,7 @@ public class PluginManagerProxy {
      * @throws RemoteException 和常驻进程通讯出现异常
      */
     public static void connectToServer(IPluginHost host) throws RemoteException {
+        // add by whw：sRemote是IPluginManagerServer类型
         if (sRemote != null) {
             if (LogDebug.LOG) {
                 LogDebug.e(TAG, "connectToServer: Already connected! host=" + sRemote);
@@ -64,6 +65,7 @@ public class PluginManagerProxy {
             return;
         }
 
+        // add by whw: host的实现类是PmHostSvc
         sRemote = host.fetchManagerServer();
     }
 

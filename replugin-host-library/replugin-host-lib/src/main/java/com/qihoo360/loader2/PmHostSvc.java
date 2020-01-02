@@ -61,6 +61,8 @@ import static com.qihoo360.replugin.helper.LogRelease.LOGR;
 
 /**
  * @author RePlugin Team
+ *
+ * add by whw：这个类可以理解成是我们的Server端，它直接或间接参与了Server端要做的事情
  */
 class PmHostSvc extends IPluginHost.Stub {
 
@@ -139,7 +141,9 @@ class PmHostSvc extends IPluginHost.Stub {
     PmHostSvc(Context context, PmBase packm) {
         mContext = context;
         mPluginMgr = packm;
+        // add by whw: 创建一个Service管理者，在PmBase的构造方法中也创建了一个这个对象
         mServiceMgr = new PluginServiceServer(context);
+        // add by whw: 创建一个插件管理者，用来控制插件的安装、卸载、获取等
         mManager = new PluginManagerServer(context);
     }
 

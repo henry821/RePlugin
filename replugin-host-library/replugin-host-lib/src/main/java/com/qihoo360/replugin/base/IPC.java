@@ -52,12 +52,17 @@ public class IPC {
      * [HIDE] 外界请不要调用此方法
      */
     public static void init(Context context) {
+        // add by whw: 通过proc文件获取当前进程名
         sCurrentProcess = SysUtils.getCurrentProcessName();
+        // add by whw: 获取当前进程pid
         sCurrentPid = Process.myPid();
+        // 获取宿主程序包名
         sPackageName = context.getApplicationInfo().packageName;
 
-        // 设置最终的常驻进程名
+        // add by whw：判断是否使用"常驻进程"(见PERSISTENT_NAME)作为插件的管理进程
+        // add by whw：并设置常驻进程名称，默认常驻进程名称是以 :GuardService 结尾
         if (HostConfigHelper.PERSISTENT_ENABLE) {
+            //add by whw：设置cppn名称为 :GuardService
             String cppn = HostConfigHelper.PERSISTENT_NAME;
             if (!TextUtils.isEmpty(cppn)) {
                 if (cppn.startsWith(":")) {
@@ -67,10 +72,13 @@ public class IPC {
                 }
             }
         } else {
+            //add by whw：如果不使用常驻进程管理插件，则使用当前进程名称
             sPersistentProcessName = sPackageName;
         }
 
+        // add by whw: 判断当前进程是否是主进程
         sIsUIProcess = sCurrentProcess.equals(sPackageName);
+        // add by whw: 判断当前进程是否是常驻进程
         sIsPersistentProcess = sCurrentProcess.equals(sPersistentProcessName);
     }
 

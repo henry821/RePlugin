@@ -74,10 +74,13 @@ public class PluginDexClassLoader extends DexClassLoader {
 
         mPluginName = pi.getName();
 
+        // add by whw: 处理多dex
         installMultiDexesBeforeLollipop(pi, dexPath, parent);
 
+        // add by whw: 获取宿主的原始classloader
         mHostClassLoader = RePluginInternal.getAppClassLoader();
 
+        // add by whw: 反射获取原classloader中的loadClass方法
         initMethods(mHostClassLoader);
     }
 

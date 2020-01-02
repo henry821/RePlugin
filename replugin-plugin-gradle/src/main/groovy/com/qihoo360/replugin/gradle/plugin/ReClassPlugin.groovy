@@ -56,11 +56,25 @@ public class ReClassPlugin implements Plugin<Project> {
                 def variantData = variant.variantData
                 def scope = variantData.scope
 
+                /**
+                 * add by whw：
+                 * 获取系统【Assemble】task，即打包apk的task
+                 */
                 def assembleTask = VariantCompat.getAssembleTask(variant)
 
+                /**
+                 * add by whw：
+                 * 创建【InstallPlugin】task，依赖于【Assemble】task
+                 */
                 def installPluginTaskName = scope.getTaskName(AppConstant.TASK_INSTALL_PLUGIN, "")
                 def installPluginTask = project.task(installPluginTaskName)
 
+                /**
+                 * add by whw：
+                 * 创建【InstallPlugin】task的操作
+                 * 流程：
+                 * 启动宿主->卸载插件->强制停止宿主->启动宿主->安装插件
+                 */
                 installPluginTask.doLast {
                     pluginDebugger.startHostApp()
                     pluginDebugger.uninstall()
@@ -134,6 +148,10 @@ public class ReClassPlugin implements Plugin<Project> {
 
             println ">>> APP_PACKAGE " + CommonData.appPackage
 
+            /**
+             * add by whw：
+             * 动态编译方案的入口
+             */
             def transform = new ReClassTransform(project)
             // 将 transform 注册到 android
             android.registerTransform(transform)

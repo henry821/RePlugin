@@ -64,16 +64,22 @@ public class PMF {
      * @param application
      */
     public static final void init(Application application) {
+        //add by whw: 保持对Application的引用
         setApplicationContext(application);
 
+        //add by whw: 1.创建了一个叫Tasks的类，在里面创建了一个主线程的Handler
+        //add by whw: 2.通过当前进程的名字判断应该将插件分配到哪个进程中
         PluginManager.init(application);
 
         sPluginMgr = new PmBase(application);
         sPluginMgr.init();
 
+        //add by whw: 将在PmBase构造中创建的PluginCommImpl赋值给Factory.sPluginManager
         Factory.sPluginManager = PMF.getLocal();
+        //add by whw: 将在PmBase构造中创建的PluginLibraryInternalProxy赋值给Factory2.sPLProxy
         Factory2.sPLProxy = PMF.getInternal();
 
+        //add by whw：Hook系统Loader，这里是系统唯一Hook点
         PatchClassLoaderUtils.patch(application);
     }
 

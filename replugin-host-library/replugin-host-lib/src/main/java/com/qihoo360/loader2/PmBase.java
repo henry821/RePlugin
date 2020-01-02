@@ -84,17 +84,17 @@ class PmBase {
     private final Context mContext;
 
     /**
-     *
+     * add by whw：用来存储Activity
      */
     private final HashSet<String> mContainerActivities = new HashSet<String>();
 
     /**
-     *
+     * add by whw：用来存储Provider
      */
     private final HashSet<String> mContainerProviders = new HashSet<String>();
 
     /**
-     *
+     * add by whw：用来存储Service
      */
     private final HashSet<String> mContainerServices = new HashSet<String>();
 
@@ -228,32 +228,43 @@ class PmBase {
     }
 
     PmBase(Context context) {
-        //
+        //add by whw: 引用Application
         mContext = context;
 
         // TODO init
         //init(context, this);
 
+        //add by whw: 判断当前进程类型
         if (PluginManager.sPluginProcessIndex == IPluginManager.PROCESS_UI || PluginManager.isPluginProcess()) {
             String suffix;
+            //add by whw: 如果是ui进程，设置suffix = N1
             if (PluginManager.sPluginProcessIndex == IPluginManager.PROCESS_UI) {
                 suffix = "N1";
             } else {
                 suffix = "" + PluginManager.sPluginProcessIndex;
             }
-            //
+            //add by whw: CONTAINER_PROVIDER_PART = ".loader.p.Provider"
+            //add by whw: 结果 = 包名.loader.p.ProviderN1 或者 包名.loader.p.Provider0 或者 包名.loader.p.Provider1
+            //add by whw: 在set中加入provider的名字
             mContainerProviders.add(IPC.getPackageName() + CONTAINER_PROVIDER_PART + suffix);
-            //
+            //add by whw: CONTAINER_SERVICE_PART = ".loader.s.Service"
+            //add by whw: 结果 = 包名.loader.s.ServiceN1 或者 包名.loader.s.Service0 或者 包名.loader.s.Service1
+            //add by whw: 在set中加入service的名称
             mContainerServices.add(IPC.getPackageName() + CONTAINER_SERVICE_PART + suffix);
         }
 
-        //
+        //add by whw: PluginProcessPer类是一个Binder对象，它代表了“当前Client端”，使用它来和Server端进行通信
+        //add by whw: 这个类的构造中又创建了两个类：
+        //add by whw: 1.PluginContainers类，用来管理Activity坑位信息的容器，初始化了多种不同启动模式和样式Activity的坑位信息
+        //add by whw: 2.PluginServiceServer类，主要负责了对Service的提供和调度工作，例如startService、stopService、bindService、unbindService等
         mClient = new PluginProcessPer(context, this, PluginManager.sPluginProcessIndex, mContainerActivities);
 
-        //
+        //add by whw：PluginCommImpl类负责宿主与插件、插件间的互通，可通过插件的Factory直接调用，也可通过RePlugin来跳转
+        //add by whw：创建的时候只是引用了Application和PmBase
         mLocal = new PluginCommImpl(context, this);
 
-        //
+        //add by whw：PluginLibraryInternalProxy类中有RePlugin框架中内部逻辑使用的很多方法，
+        //add by whw：包括插件中通过“反射”调用的内部逻辑
         mInternal = new PluginLibraryInternalProxy(this);
     }
 
@@ -261,20 +272,21 @@ class PmBase {
 
         RePlugin.getConfig().getCallbacks().initPnPluginOverride();
 
+        // add by whw: 判断是否使用常驻进程管理插件，默认是true
         if (HostConfigHelper.PERSISTENT_ENABLE) {
             // （默认）“常驻进程”作为插件管理进程，则常驻进程作为Server，其余进程作为Client
             if (IPC.isPersistentProcess()) {
                 // 初始化“Server”所做工作
-                initForServer();
+                initForServer(); // add by whw: 插件管理进程
             } else {
                 // 连接到Server
-                initForClient();
+                initForClient(); // add by whw: 其他进程
             }
         } else {
             // “UI进程”作为插件管理进程（唯一进程），则UI进程既可以作为Server也可以作为Client
             if (IPC.isUIProcess()) {
                 // 1. 尝试初始化Server所做工作，
-                initForServer();
+                initForServer(); // add by whw: 插件管理进程
 
                 // 2. 注册该进程信息到“插件管理进程”中
                 // 注意：这里无需再做 initForClient，因为不需要再走一次Binder
@@ -287,6 +299,8 @@ class PmBase {
         }
 
         // 最新快照
+        // add by whw：从mPlugins中将所有插件信息取出，保存到PLUGINS中，
+        // add by whw：PLUGINS是一个HashMap，保存的key是包名或者别名，value是PluginInfo
         PluginTable.initPlugins(mPlugins);
 
         // 输出
@@ -306,22 +320,35 @@ class PmBase {
             LogDebug.d(PLUGIN_TAG, "search plugins from file system");
         }
 
+        //add by whw: PmHostSvc继承于IPluginHost.Stub，是一个Binder对象
         mHostSvc = new PmHostSvc(mContext, this);
+        //add by whw: 将PmHostSvc赋值给PluginProcessMain
+        //add by whw: 将PluginManagerServer中的Binder对象Stub赋值给PluginManagerProxy
         PluginProcessMain.installHost(mHostSvc);
+        //add by whw: 清理之前的任务
         StubProcessManager.schedulePluginProcessLoop(StubProcessManager.CHECK_STAGE1_DELAY);
 
         // 兼容即将废弃的p-n方案 by Jiongxuan Zhang
+        // add by whw: Builder.PxAll类里封装了各种插件类型的集合，还有生成插件模型信息和删除信息的方法
         mAll = new Builder.PxAll();
+        // add by whw: 搜索所有本地插件和V5插件信息，并添加进Builder集合中(就是mAll字段)，然后删除一些不符合规则的插件信息
+        // add by whw: 这里搜索了所有本地插件，也就是放在asset中的插件，是通过插件自动生成的json文件来扫描的
+        // add by whw: v5是通过context.getDir路径来扫描的
         Builder.builder(mContext, mAll);
+        // add by whw: 将刚扫描的本地插件封装成Plugin添加进mPlugins中，mPlugins代表所有插件的集合
         refreshPluginMap(mAll.getPlugins());
 
         // [Newest!] 使用全新的RePlugin APK方案
         // Added by Jiongxuan Zhang
         try {
+            //add by whw: 这里调用的load是远程调用的，最终调用了PluginManagerServer的loadLocked方法
+            //add by whw: 这里主要是判断之前安装的插件是否需要更新或删除等操作，然后进行响应的操作并返回处理后的集合
+            //add by whw: 返回的集合是一个副本，这样可以保证信息的安全性
             List<PluginInfo> l = PluginManagerProxy.load();
             if (l != null) {
                 // 将"纯APK"插件信息并入总的插件信息表中，方便查询
                 // 这里有可能会覆盖之前在p-n中加入的信息。本来我们就想这么干，以"纯APK"插件为准
+                // add by whw: 将刚才查询到的插件信息也添加进mPlugins中，mPlugins代表所有插件的集合
                 refreshPluginMap(l);
             }
         } catch (RemoteException e) {
@@ -353,6 +380,7 @@ class PmBase {
     private void refreshPluginsFromHostSvc() {
         List<PluginInfo> plugins = null;
         try {
+            //add by whw：获取插件
             plugins = PluginProcessMain.getPluginHost().listPlugins();
         } catch (Throwable e) {
             if (LOGR) {
@@ -368,6 +396,7 @@ class PmBase {
                 LogDebug.d(PLUGIN_TAG, "plugins need to perform update operations");
             }
             try {
+                //add by whw；更新插件
                 updatedPlugins = PluginManagerProxy.updateAllPlugins();
             } catch (RemoteException e) {
                 e.printStackTrace();
@@ -457,7 +486,7 @@ class PmBase {
         }
     }
 
-    final void attach() {
+    final void  attach() {
         //
         try {
             mDefaultPluginName = PluginProcessMain.getPluginHost().attachPluginProcess(IPC.getCurrentProcessName(), PluginManager.sPluginProcessIndex, mClient, mDefaultPluginName);
@@ -475,10 +504,11 @@ class PmBase {
     }
 
     final void callAttach() {
-        //
+        //add by whw：获取RePluginClassLoader
         mClassLoader = PmBase.class.getClassLoader();
 
         // 挂载
+        // add by whw: Plugin代表一个插件，将Context、ClassLoader和PluginCommImpl绑定到该插件上
         for (Plugin p : mPlugins.values()) {
             p.attach(mContext, mClassLoader, mLocal);
         }
@@ -489,6 +519,7 @@ class PmBase {
                 //
                 Plugin p = mPlugins.get(mDefaultPluginName);
                 if (p != null) {
+                    // add by whw：真正加载插件是Plugin的load方法
                     boolean rc = p.load(Plugin.LOAD_APP, true);
                     if (!rc) {
                         if (LOG) {

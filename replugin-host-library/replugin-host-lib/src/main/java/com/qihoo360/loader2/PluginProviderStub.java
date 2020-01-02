@@ -75,6 +75,7 @@ public class PluginProviderStub {
             LogDebug.d(PLUGIN_TAG, "stubMain projection=" + Arrays.toString(projection) + " selection=" + selection);
         }
 
+        // add by whw : 常量SELECTION_MAIN_BINDER = "main_binder"
         if (SELECTION_MAIN_BINDER.equals(selection)) {
             return BinderCursor.queryBinder(PMF.sPluginMgr.getHostBinder());
         }
@@ -142,6 +143,7 @@ public class PluginProviderStub {
      * @return
      */
     static final IBinder proxyFetchHostBinder(Context context) {
+        // add by whw: 常量SELECTION_MAIN_BINDER = "main_binder"
         return proxyFetchHostBinder(context, SELECTION_MAIN_BINDER);
     }
 
@@ -162,7 +164,10 @@ public class PluginProviderStub {
         //
         Cursor cursor = null;
         try {
+            //add by whw: uri经过拼接后： content://包名.loader.p.main/main
             Uri uri = ProcessPitProviderPersist.URI;
+            //add by whw: 通过provider返回Binder
+            //add by whw: 常量PROJECTION_MAIN = "main"
             cursor = context.getContentResolver().query(uri, PROJECTION_MAIN, selection, null, null);
             if (cursor == null) {
                 if (LOG) {
@@ -173,6 +178,7 @@ public class PluginProviderStub {
             while (cursor.moveToNext()) {
                 //
             }
+            //add by whw: 通过cursor得到Binder对象
             IBinder binder = BinderCursor.getBinder(cursor);
             if (LOG) {
                 LogDebug.d(PLUGIN_TAG, "proxy fetch binder: binder=" + binder);

@@ -68,6 +68,7 @@ public class PatchClassLoaderUtils {
             }
 
             // 获取mPackageInfo.mClassLoader
+            // add by whw: 也就是宿主的PathClassLoader对象
             ClassLoader oClassLoader = (ClassLoader) ReflectUtils.readField(oPackageInfo, "mClassLoader");
             if (oClassLoader == null) {
                 if (LOGR) {
@@ -77,6 +78,7 @@ public class PatchClassLoaderUtils {
             }
 
             // 外界可自定义ClassLoader的实现，但一定要基于RePluginClassLoader类
+            // add by whw: 通过宿主的父classloader和宿主classloader生成RePluginClassLoader
             ClassLoader cl = RePlugin.getConfig().getCallbacks().createClassLoader(oClassLoader.getParent(), oClassLoader);
 
             // 将新的ClassLoader写入mPackageInfo.mClassLoader

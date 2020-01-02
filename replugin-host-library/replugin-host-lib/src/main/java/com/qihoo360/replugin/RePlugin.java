@@ -960,10 +960,13 @@ public class RePlugin {
                 return;
             }
 
+            //add by whw：保留Application
             RePluginInternal.init(app);
             sConfig = config;
+            //add by whw：初始化RePluginConfig中的默认callback和目录等
             sConfig.initDefaults(app);
 
+            //add by whw：初始化进程信息，判断当前进程是UI进程还是Persistent进程
             IPC.init(app);
 
             // 打印当前内存占用情况
@@ -980,9 +983,15 @@ public class RePlugin {
             AppVar.sAppContext = app;
 
             // Plugin Status Controller
+            // add by whw：PluginStatusController用来管理插件的运行状态：正常运行、被禁用等情况
+            // add by whw：设置Application的引用
             PluginStatusController.setAppContext(app);
 
+            //add by whw：初始化当前进程，会做两件事：
+            //add by whw：1.初始化PmBase
+            //add by whw：2.Hook系统的PathClassLoader
             PMF.init(app);
+            //add by whw：将插件与当前进程关联，如果是在单独的进程中运行插件，则会加载并运行插件
             PMF.callAttach();
 
             sAttached = true;

@@ -43,20 +43,45 @@ public class Replugin implements Plugin<Project> {
         this.project = project
 
         /* Extensions */
+        /**
+         * add by whw：
+         * 使用RepluginConfig中的配置在gradle文件中生成repluginHostConfig配置项
+         */
         project.extensions.create(AppConstant.USER_CONFIG, RepluginConfig)
 
         if (project.plugins.hasPlugin(AppPlugin)) {
 
+            /**
+             * add by whw:
+             * 获取project中AppExtension类型的extension,
+             * android{
+             *     ……
+             * }
+             */
             def android = project.extensions.getByType(AppExtension)
+            /**
+             * add by whw:
+             * 遍历android配置下的每个参数
+             */
             android.applicationVariants.all { variant ->
 
                 addShowPluginTask(variant)
 
+                /**
+                 * add by whw：
+                 * 获取repluginHostConfig配置项并检查里面配置的配置是否有效
+                 */
                 if (config == null) {
                     config = project.extensions.getByName(AppConstant.USER_CONFIG)
                     checkUserConfig(config)
                 }
 
+                /**
+                 * add by whw：
+                 * 1.获取应用包名
+                 * 2.根据应用包名和repluginHostConfig配置项生成宿主AndroidManifest.xml中
+                 *   【插件坑位】的相关代码
+                 */
                 def generateBuildConfigTask = VariantCompat.getGenerateBuildConfigTask(variant)
                 def appID = generateBuildConfigTask.appPackageName
                 def newManifest = ComponentsGenerator.generateComponent(appID, config)
@@ -66,21 +91,39 @@ public class Replugin implements Plugin<Project> {
                 def scope = variantData.scope
 
                 //host generate task
+                /**
+                 * add by whw：
+                 * 创建task，名字是HostConfig
+                 */
                 def generateHostConfigTaskName = scope.getTaskName(AppConstant.TASK_GENERATE, "HostConfig")
                 def generateHostConfigTask = project.task(generateHostConfigTaskName)
 
+                /**
+                 * add by whw：
+                 * 定义task的操作：创建RePluginHostConfig.java至BuildConfig目录
+                 */
                 generateHostConfigTask.doLast {
                     FileCreators.createHostConfig(project, variant, config)
                 }
                 generateHostConfigTask.group = AppConstant.TASKS_GROUP
 
                 //depends on build config task
+                /**
+                 * add by whw：
+                 * 把新创建的【HostConfig】task依赖于系统的【generateBuildConfig】task
+                 */
                 if (generateBuildConfigTask) {
                     generateHostConfigTask.dependsOn generateBuildConfigTask
                     generateBuildConfigTask.finalizedBy generateHostConfigTask
                 }
 
                 //json generate task
+                /**
+                 * add by whw：
+                 * 创建生成【plugins-builtin.json】文件的task
+                 * 原理：扫描宿主\assets\plugins目录下的插件文件并基于apk文件规则解析出插件信息，包名，版本号等，
+                 *      然后拼装成json文件
+                 */
                 def generateBuiltinJsonTaskName = scope.getTaskName(AppConstant.TASK_GENERATE, "BuiltinJson")
                 def generateBuiltinJsonTask = project.task(generateBuiltinJsonTaskName)
 
@@ -96,6 +139,10 @@ public class Replugin implements Plugin<Project> {
                     mergeAssetsTask.finalizedBy generateBuiltinJsonTask
                 }
 
+                /**
+                 * add by whw:：
+                 * 将坑位xml字符串与原有xml<application></application>标签内的配置信息合二为一
+                 */
                 variant.outputs.each { output ->
                     VariantCompat.getProcessManifestTask(output).doLast {
                         println "${AppConstant.TAG} processManifest: ${it.outputs.files}"
