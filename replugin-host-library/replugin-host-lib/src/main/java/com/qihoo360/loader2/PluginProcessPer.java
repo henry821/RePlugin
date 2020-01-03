@@ -89,6 +89,7 @@ class PluginProcessPer extends IPluginClient.Stub {
         String activity = null;
 
         // 先找登记的，如果找不到，则用forward activity
+        // add by whw: ActivityState是坑位Activity与真实Activity的对应关系对象
         PluginContainers.ActivityState state = mACM.lookupByContainer(container);
         if (state == null) {
             // PACM: loadActivityClass, not register, use forward activity, container=
@@ -104,6 +105,7 @@ class PluginProcessPer extends IPluginClient.Stub {
             LogDebug.d(PLUGIN_TAG, "PACM: loadActivityClass in=" + container + " target=" + activity + " plugin=" + plugin);
         }
 
+        //add by whw: 通过插件名从缓存中加载Plugin对象
         Plugin p = mPluginMgr.loadAppPlugin(plugin);
         if (p == null) {
             // PACM: loadActivityClass, not found plugin
@@ -132,6 +134,16 @@ class PluginProcessPer extends IPluginClient.Stub {
         return c;
     }
 
+    /**
+     * add by whw
+     *
+     * @param plugin 插件名
+     * @param process Activity所在进程
+     * @param target 原目标Activity名
+     * @param intent 指向原目标Activity的Intent
+     * @return
+     * @throws RemoteException
+     */
     @Override
     public String allocActivityContainer(String plugin, int process, String target, Intent intent) throws RemoteException {
         // 一旦有分配，则进入监控状态（一是避免不退出的情况，二也是最重要的是避免现在就退出的情况）

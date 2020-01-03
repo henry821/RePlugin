@@ -1013,8 +1013,9 @@ public class RePlugin {
                 return;
             }
 
+            //add by whw: 切换任务到当前Handler
             Tasks.init();
-
+            //add by whw: 注册广播接收，针对插件更新卸载等
             PMF.callAppCreate();
 
             // 注册监听PluginInfo变化的广播以接受来自常驻进程的更新

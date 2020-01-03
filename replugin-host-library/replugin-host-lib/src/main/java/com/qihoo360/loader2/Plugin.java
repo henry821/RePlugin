@@ -823,7 +823,7 @@ class Plugin {
                 mInfo = info;
             }
 
-            //
+            //add by whw: 加载dex，获取组件信息
             mLoader = new Loader(context, mInfo.getName(), mInfo.getPath(), this);
             if (!mLoader.loadDex(parent, load)) {
                 return false;

@@ -542,11 +542,13 @@ a 流程完成
      * 登记坑和activity的映射
      * 当前进程：宿主进程
      *
-     * @param ai
-     * @param plugin
-     * @param activity
-     * @param process
-     * @param intent
+     * add by whw
+     *
+     * @param ai 要启动的插件Activity的ActivityInfo
+     * @param plugin 插件名
+     * @param activity 要启动的插件的Activity
+     * @param process Activity所在进程
+     * @param intent 原始Intent
      * @return
      */
     final String alloc(ActivityInfo ai, String plugin, String activity, int process, Intent intent) {
@@ -585,12 +587,14 @@ a 流程完成
     }
 
     /**
-     * @param ai
-     * @param map
-     * @param plugin
-     * @param activity
-     * @param intent
-     * @return
+     * add by whw
+     *
+     * @param ai 要打开的Activity对应的ActivityInfo
+     * @param map 根据 launchMode 和 theme 获取对应的坑位集合
+     * @param plugin 插件名
+     * @param activity 要打开的Activity名
+     * @param intent 调用者传入的Intent
+     * @return 坑位信息
      */
     private final ActivityState allocLocked(ActivityInfo ai, HashMap<String, ActivityState> map,
                                             String plugin, String activity, Intent intent) {
@@ -618,6 +622,7 @@ a 流程完成
                 if (LOG) {
                     LogDebug.d(PLUGIN_TAG, "PACM: alloc empty container=" + state.container);
                 }
+                //add by whw: 把插件名和要跳转的Activity存入坑位信息
                 state.occupy(plugin, activity);
                 return state;
             }

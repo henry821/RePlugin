@@ -144,11 +144,12 @@ public class RePluginClassLoader extends PathClassLoader {
     protected Class<?> loadClass(String className, boolean resolve) throws ClassNotFoundException {
         //
         Class<?> c = null;
+        //add by whw: 这里使用的是插件的ClassLoader(PluginDexClassLoader)加载类
         c = PMF.loadClass(className, resolve);
         if (c != null) {
             return c;
         }
-        //
+        //add by whw: 如果插件没有找到该类，则使用被Hook的ClassLoader(PathClassLoader)加载类
         try {
             c = mOrig.loadClass(className);
             // 只有开启“详细日志”才会输出，防止“刷屏”现象

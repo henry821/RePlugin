@@ -265,6 +265,8 @@ public class PluginLibraryInternalProxy {
             from.setComponent(new ComponentName(plugin, activity));
         }
 
+        //add by whw: 此处返回的ComponentName即找到的坑位信息
+        //add by whw: Component信息：(宿主包名，坑位Activity名)
         ComponentName cn = mPluginMgr.mLocal.loadPluginActivity(intent, plugin, activity, process);
         if (cn == null) {
             if (LOG) {
@@ -294,6 +296,7 @@ public class PluginLibraryInternalProxy {
 //            }
 //        } else {
 
+        //add by whw: 执行系统的startActivity方法，传入的intent指向了坑位Activity
         context.startActivity(intent);
 
         // 通知外界，已准备好要打开Activity了
